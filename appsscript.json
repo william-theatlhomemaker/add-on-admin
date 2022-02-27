@@ -8,6 +8,13 @@
         "libraryId": "1xpm_5Ikn0TryRRvY6P29QlXivTxOzrPD9RlPBC4eEpN8wsAOcR6vudHL",
         "developmentMode": true
       }
+    ],
+    "enabledAdvancedServices": [
+      {
+        "userSymbol": "Drive",
+        "version": "v2",
+        "serviceId": "drive"
+      }
     ]
   },
   "exceptionLogging": "STACKDRIVER",
@@ -17,8 +24,10 @@
     "https://www.googleapis.com/auth/presentations.currentonly",
     "https://www.googleapis.com/auth/gmail.addons.execute",
     "https://www.googleapis.com/auth/gmail.addons.current.message.readonly",
+    "https://www.googleapis.com/auth/gmail.readonly",
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive",
+    "https://www.googleapis.com/auth/documents",
     "https://www.googleapis.com/auth/userinfo.email"
   ],
   "runtimeVersion": "V8",
@@ -33,9 +42,9 @@
         "runFunction": "onHomepage"
       }
     },
-    "docs" : {},
-    "slides" : {},
-    "sheets" : {},
-    "gmail" : {}
+    "docs": {},
+    "slides": {},
+    "sheets": {},
+    "gmail": {}
   }
 }

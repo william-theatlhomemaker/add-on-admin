@@ -1,25 +1,3 @@
-//"https://www.gstatic.com/images/branding/product/1x/translate_24dp.png",
-//<a href="https://www.flaticon.com/free-icons/invoice" title="invoice icons">Invoice icons created by Freepik - Flaticon</a>
-
-/*
-,
-      "universalActions": [{
-        "runFunction": "messageData"
-      }]
-      */
-
-const DEFAULT_INPUT_TEXT = '';
-const DEFAULT_OUTPUT_TEXT = '';
-const DEFAULT_ORIGIN_LAN = ''; // Empty string means detect langauge
-const DEFAULT_DESTINATION_LAN = 'en' // English
-
-const properties = function(){
-  let receiptSheet = SpreadsheetApp.openById('1rjdkU2R1K36ySk_zD1ZafAaiodAc17U5qbkID5Vlvzc').getSheetByName('')
-}
-
-
-const LANGUAGE_MAP = []
-
 /**
  * Callback for rendering the main card.
  * @return {CardService.Card} The card to show the user.
@@ -27,17 +5,34 @@ const LANGUAGE_MAP = []
 function onHomepage(e) {
   //e{clientPlatform=web, commonEventObject={hostApp=GMAIL, platform=WEB}, hostApp=gmail}
   
-  return createSelectionCard(e, DEFAULT_ORIGIN_LAN, DEFAULT_DESTINATION_LAN, DEFAULT_INPUT_TEXT, DEFAULT_OUTPUT_TEXT);
+  return createSelectionCard(e);
 }
 
-/**
- * Main function to generate the main card.
- * @param {String} originLanguage Language of the original text.
- * @param {String} destinationLanguage Language of the translation.
- * @param {String} inputText The text to be translated.
- * @param {String} outputText The text translated.
- * @return {CardService.Card} The card to show to the user.
- */
+function gotoBill(e) {
+    Logger.log("gotoRecipt(e) called")
+     //Logger.log(e)
+    var service = e.parameters.service;  // Current card ID
+    var title =  (service[0].toUpperCase() + service.substring(1)) + ' Card ';
+    Logger.log(title)
+
+    //message data
+    let data = messageData(e)
+    Logger.log(data)
+    
+    let card = CardService.newCardBuilder()
+                .setHeader(
+                  CardService.newCardHeader()
+                  .setTitle("Enter Bill"))
+                .addSection(billFormSection(data))
+                .build()
+
+    // Create a Navigation object to push the card onto the stack.
+    // Return a built ActionResponse that uses the navigation object.
+    var nav = CardService.newNavigation().pushCard(card);
+    return CardService.newActionResponseBuilder()
+        .setNavigation(nav)
+        .build();
+  }
 
 /**
    *  Create a child card, and then navigate to it.
@@ -61,11 +56,7 @@ function onHomepage(e) {
                   .setTitle("Enter Receipt"))
                 .addSection(receiptFormSection(data))
                 .build()
-
-    
-        
-
-        
+   
     // Create a Navigation object to push the card onto the stack.
     // Return a built ActionResponse that uses the navigation object.
     var nav = CardService.newNavigation().pushCard(card);
@@ -91,11 +82,7 @@ function onHomepage(e) {
                   .setTitle("Enter COI"))
                 .addSection(coiFormSection(data))
                 .build()
-
-    
-        
-
-        
+ 
     // Create a Navigation object to push the card onto the stack.
     // Return a built ActionResponse that uses the navigation object.
     var nav = CardService.newNavigation().pushCard(card);
@@ -104,11 +91,15 @@ function onHomepage(e) {
         .build();
   }
 
-function createSelectionCard(e, originLanguage, destinationLanguage, inputText, outputText) {
+/**
+   *  Create a child card, and then navigate to it.
+   *  @param {Object} e object containing the service property card to build.
+   *  @return {ActionResponse}
+   */
+function createSelectionCard(e) {
   var hostApp = e['hostApp'];
   var builder = CardService.newCardBuilder();
 
- 
   //Buttons section
   builder.addSection(CardService.newCardSection()
     .addWidget(CardService.newButtonSet()
@@ -123,19 +114,13 @@ function createSelectionCard(e, originLanguage, destinationLanguage, inputText, 
         .setOnClickAction(CardService.newAction().setFunctionName('gotoCOI').setParameters({"service":"coi"}))
         .setDisabled(false))
       .addButton(CardService.newTextButton()
-        .setText('Receipt2')
+        .setText('Bill')
         .setTextButtonStyle(CardService.TextButtonStyle.FILLED)
-        .setOnClickAction(CardService.newAction().setFunctionName('translateText'))
-        .setDisabled(false))
-      .addButton(CardService.newTextButton()
-        .setText('Receipt3')
-        .setTextButtonStyle(CardService.TextButtonStyle.FILLED)
-        .setOnClickAction(CardService.newAction().setFunctionName('translateText'))
+        .setOnClickAction(CardService.newAction().setFunctionName('gotoBill').setParameters({"service":"bill"}))
         .setDisabled(false))
         ))
 
         CardService.newNavigation()
-
 
 /*
   if (hostApp === 'docs') {
@@ -164,20 +149,9 @@ function createSelectionCard(e, originLanguage, destinationLanguage, inputText, 
         .setDisabled(false)))
   }
 
-
   builder.addSection(fromSection);
 */
   return builder.build();
-
-}
-
-
-
-/**
- * Helper function to translate the text. If the originLanguage is an empty string, the API detects the language
- * @return {CardService.Card} The card to show to the user.
- */
-function translateText(e) {
 
 }
 

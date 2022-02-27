@@ -136,7 +136,6 @@ function getVendors(e){
 
   let vendor = autoComplete(e.formInputs.vendor[0],vendors)
   
-  
   vendor.forEach(function(vendor){
     console.log(typeof vendor)
    suggestions.addSuggestion(vendor)
@@ -163,21 +162,8 @@ function getInsured(e){
    
   var suggestions = CardService.newSuggestions();
   let subcontractorSheet = SpreadsheetApp.openById('1JipJWSvW5bZkXOcMRP5CDaOf_S3zkxJub5wdU3RRWcc').getSheetByName('Subcontractor')
-
   
-  let subcontractors = []
-
-  //subcontractorSheet.getRange(2,2,subcontractorSheet.getLastRow()).getValues().flat() //.forEach(function(subcontractor){
-      
-      //if(subcontractor!=''){
-      //  subcontractors.push(subcontractor[0])
-     // }else{
-      //  return
-      //}
-    //})
-
   let subcontractor = autoComplete(e.formInputs.insured[0],subcontractorSheet.getRange(2,2,subcontractorSheet.getLastRow()).getValues().flat())
-  
   
   subcontractor.forEach(function(subcontractor){
     //console.log(typeof subcontractor)
@@ -189,6 +175,40 @@ function getInsured(e){
       .build();
 }
 
+/**
+ * Retrives a sorted list from filter sheet
+ * Makes text suggestions 
+ * builds card using suggestions
+ *  
+ * todo: lookup insured by email sender
+ * 
+ * @param {Event} event The key up event from text input feild.
+ * @return {Card}
+ */
+function getVendor(e){
+  Logger.log("getVendor Called")
+  Logger.log(e.formInputs.vendor[0])
+   
+  var suggestions = CardService.newSuggestions();
+  let vendorSheet = SpreadsheetApp.openById('1go1I3yXV2uiv65vQeUVQH5x7sGOmikJbCyfuGQ0Lve0').getSheetByName('Vendors')
+  let heystack = vendorSheet.getRange(2,2,vendorSheet.getLastRow()).getValues().flat()
+  let needle = e.formInputs.vendor[0]
+
+  if(heystack.length == 0){
+    //addVendor()
+  }
+
+  let subcontractor = autoComplete(needle,heystack)
+  
+  
+  subcontractor.forEach(function(subcontractor){
+   suggestions.addSuggestion(subcontractor)
+  })
+
+  return CardService.newSuggestionsResponseBuilder()
+      .setSuggestions(suggestions)
+      .build();
+}
 
 /**
  * Retrives a sorted list from filter sheet
@@ -247,11 +267,11 @@ function getSheetUrl() {
 }
 
 /**
- * Create new row in DB
+ * Create new row in receipt DB
  * @param {Event} e 
  * 
  */
-function submitForm(e) {
+function submitReceiptForm(e) {
   Logger.log("submitForm(e) called")
 
   let responce = e.formInput
@@ -269,12 +289,12 @@ function submitForm(e) {
 }
 
 /**
- * Create new row in DB
+ * Create new row in COI DB
  * @param {Event} e 
  * 
  */
 function submitCoiForm(e) {
-  // file structure - 'COI Uploader DB_Files_/4528d239.COI PDF.132125.pdf'
+  // file structure - 'COI Uploader DB_Files_/4528d239.bill.132125.pdf'
   // file structure - 'COI Uploader DB_Images/5a2ac7f6.COI image.142756.jpg'
   //e={insured=Neeklight LLC, date={msSinceEpoch=1.6455744E12}, wcDate={msSinceEpoch=1.6456608E12}, attachments=-1.0, glDate={msSinceEpoch=1.6455744E12}}
   //id	Timestamp	COI image	COI PDF	Date	Insured	GL EXP 	WC EXP	Certificate Holder	ADDL INSD
@@ -285,12 +305,12 @@ function submitCoiForm(e) {
   let date = new Date(responce.date.msSinceEpoch)
   //let transactionDate = (date.getMonth()+1)+'/'+date.getDate()+'/'+date.getFullYear()
   //let amount = amountData(e)
-  let data = [String(ATL.getUUID()).split("-")[0],timestamp,/*Image*/,/*fileData(e)*/,new Date(responce.date.msSinceEpoch),responce.insured,new Date(responce.glDate.msSinceEpoch),new Date(responce.wcDate.msSinceEpoch),responce,responce]
-      //responce['property'],responce['vendor'],responce['item'],/*responce['amount']*/amount,responce['referanceNumber']]
-    
+  let data = [String(ATL.getUUID()).split("-")[0],timestamp]
+  let _data = [new Date(responce.date.msSinceEpoch),responce.insured,ATL.dateFormat(new Date(responce.glDate.msSinceEpoch),'d'),ATL.dateFormat(new Date(responce.wcDate.msSinceEpoch),'d')]
+      
   //data = data.concat(fileData(e))
   
-  //if(!_testigInProgress)receiptSheet.appendRow(data)
+  
   Logger.log(responce).log(date)
 
 
@@ -315,9 +335,10 @@ function submitCoiForm(e) {
     if(_testigInProgress){/*left blank intentioanlly*/}else{
       //temp file
       let temp = COI_Uploader_DB_Files_.createFile(fileName+".txt", message.getBody(), "text/html") //MimeType.PDF);  
-      fileName = String(ATL.getUUID()).split("-")[0] + '.PDF file.' + String(ATL.getUUID().split("-")[4])
+      //fileName = String(ATL.getUUID()).split("-")[0] + '.PDF file.' + String(ATL.getUUID().split("-")[4])
       COI_Uploader_DB_Files_.createFile(temp.getAs("application/pdf")).setName(fileName)
       temp.setTrashed(true);
+      data = data.concat(['',output]).concat(_data)
     }
 
   }else{
@@ -330,19 +351,127 @@ function submitCoiForm(e) {
         fileName = String(ATL.getUUID()).split("-")[0] + ".COI image." + String(ATL.getUUID().split("-")[4])
         output = directory + "/" + fileName + '.' + fileType
         if(_testigInProgress){/*left blank intentioanlly*/Logger.log(output)}else{COI_Uploader_DB_Images.createFile(attachmentBlob).setName(fileName+"."+fileType)}
+        data = data.concat(output,'')
         //if(!_testigInProgress)COI_Uploader_DB_Images.createFile(attachmentBlob).setName(fileName)
       break
       case 'application/pdf':
-        directory = 'Receipts_Files_' // folder id'1pOd3phzjBgg4Hcmm5iLPu-z_uhWL1olg'
+        directory = 'COI Uploader DB_Files_' // folder id'1pOd3phzjBgg4Hcmm5iLPu-z_uhWL1olg'
         fileName = String(ATL.getUUID()).split("-")[0] + '.PDF file.' + String(ATL.getUUID().split("-")[4])
         output = directory+ "/" +fileName+'.'+fileType
         if(_testigInProgress){/*left blank intentioanlly*/Logger.log(output)}else{COI_Uploader_DB_Files_.createFile(attachmentBlob).setName(fileName+"."+fileType)}
+        data = data.concat(['',output])
       break
     }  
-    Logger.log(output)  
+    data = data.concat(_data) 
+    Logger.log(data)
+    if(_testigInProgress){}else{coiSheet.appendRow(data)}
   }
 
+  return 'FIN'
+}
 
+/**
+ * Create new row in Bill DB
+ * @param {Event} e 
+ * 
+ */
+function submitBillForm(e) {
+  Logger.log("submitBillForm(e) called")
+
+  let responce = e.formInput
+  let id	= String(ATL.getUUID()).split("-")[0]
+  let timestamp = (new Date().getMonth()+1)+'/'+new Date().getDate()+'/'+new Date().getFullYear()+" " + new Date().toTimeString().split(' ')[0]	
+  let dueDate	= new Date(responce.dueDate.msSinceEpoch).toDateString()
+  let propertyId	= responce.job
+  let vendorId	= responce.vendor
+  let invoiceReferance	= responce.refNum
+  let invoiceAmount	= responce.amount	
+  let blank = ''
+  let data = [ 
+              id,
+              timestamp,
+              dueDate,
+              propertyId,
+              vendorId,
+              invoiceReferance,
+              invoiceAmount,
+              blank,
+              blank
+              ]
+  
+  let  message = getCurrentMessage(e)
+  let attachmentIndex = e.formInput.attachments
+
+  let invoiceFilesId = '1Kp6zit1GIeLZmoTMcSbxa4QfmnsBmYm6' //foldrName:'Invoice files'
+  let invoiceFiles = DriveApp.getFolderById(invoiceFilesId)
+  let invoiceImageId = '1cNZQgVzMnk_hKeKvhXtkRRy1sxsqc6Du' //foldrName:'Invoice images'
+  let invoiceImage = DriveApp.getFolderById(invoiceImageId)
+
+  let directory
+  let fileName
+  let output
+
+  if(attachmentIndex == -1){
+    directory = 'Invoice files' 
+    fileName = String(ATL.getUUID()).split("-")[0] + '.bill.' + String(ATL.getUUID().split("-")[4])
+
+    output = directory + "/" + fileName + '.pdf'
+
+    if(_testigInProgress){}else{
+      //temp file
+      let temp = invoiceFiles.createFile(fileName+".txt", message.getBody(), "text/html") //MimeType.PDF);  
+      fileName = String(ATL.getUUID()).split("-")[0] + '.PDF file.' + String(ATL.getUUID().split("-")[4])
+      invoiceFiles.createFile(temp.getAs("application/pdf")).setName(fileName)
+      temp.setTrashed(true);
+    }
+
+  }else{
+  let attachment = message.getAttachments()[parseInt(attachmentIndex)]
+  let attachmentBlob = attachment.copyBlob()   
+    let fileType = attachment.getContentType().split("/")[1]
+    switch(attachment.getContentType()){
+      case 'image/jpeg':
+        
+      Logger.log('Invoice images')
+        directory = 'Invoice images' 
+        fileName = String(ATL.getUUID()).split("-")[0] + ".bill." + String(ATL.getUUID().split("-")[4])
+        output = directory + "/" + fileName + '.' + fileType
+        if(_testigInProgress){Logger.log(output)}else{invoiceImage.createFile(attachmentBlob).setName(fileName+"."+fileType)}
+        data = data.concat([output,''])
+        
+      break
+      case 'application/pdf':
+      Logger.log('Invoice files')
+      
+        directory = 'Invoice files' // folder id'1pOd3phzjBgg4Hcmm5iLPu-z_uhWL1olg'
+        fileName = String(ATL.getUUID()).split("-")[0] + '.PDF file.' + String(ATL.getUUID().split("-")[4])
+        output = directory+ "/" +fileName+'.'+fileType
+        if(_testigInProgress){Logger.log(output)}else{invoiceFiles.createFile(attachmentBlob).setName(fileName+"."+fileType)}
+        data = data.concat(['',output])
+        //Logger.log(data)
+      break
+      case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+        let temp = invoiceFiles.createFile(attachmentBlob).setName('bill-temp') // store 
+        let newDoc = Drive.newFile();        
+        let blob =temp.getBlob();       
+        let file = Drive.Files.insert(newDoc,blob,{convert:true});        
+        DocumentApp.openById(file.id).setName("Bill-temp").saveAndClose()  
+        let doc = DriveApp.getFileById(file.id)  
+        directory = 'Invoice files' // folder id'1pOd3phzjBgg4Hcmm5iLPu-z_uhWL1olg'
+        fileName = String(ATL.getUUID()).split("-")[0] + '.PDF file.' + String(ATL.getUUID().split("-")[4])
+        output = directory+ "/" +fileName+'.pdf'
+        if(_testigInProgress){Logger.log(output)}else{invoiceFiles.createFile(doc.getAs('application/pdf')).setName(fileName+".pdf")}
+        data = data.concat(['',output])
+        temp.setTrashed(true)
+        DriveApp.getFileById(file.id).setTrashed(true)
+    }  
+  }
+  Logger.log(fileName+".pdf").log(data)
+  if(!_testigInProgress)billSheet.appendRow(data)
+}
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 /**
@@ -406,7 +535,7 @@ function fileData(e){
         fileName = String(ATL.getUUID()).split("-")[0] + ".Image." + String(ATL.getUUID().split("-")[4])
         output = [directory+ "/" +fileName+'.'+fileType,'','Image','false']
         if(_testigInProgress){/*left blank intentioanlly*/}else{Receipts_Images.createFile(attachmentBlob).setName(fileName)}
-        if(!_testigInProgress)Receipts_Images.createFile(attachmentBlob).setName(fileName)
+        //if(!_testigInProgress)Receipts_Images.createFile(attachmentBlob).setName(fileName)
       break
       case 'application/pdf':
         directory = 'Receipts_Files_' // folder id'1pOd3phzjBgg4Hcmm5iLPu-z_uhWL1olg'
@@ -419,7 +548,6 @@ function fileData(e){
   Logger.log(output)
   return output
 }
-
 
 /**
  * @see https://stackoverflow.com/questions/11404855/javascript-autocomplete-without-external-library

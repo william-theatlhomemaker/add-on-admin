@@ -5,24 +5,14 @@
 function coiFormSection(prefills){
   let section = CardService.newCardSection()
   
-  section.addWidget(
-      date(prefills)
-    )
-  section.addWidget(
-      insured()
-    )
-  section.addWidget(
-      glDatePicker(prefills)
-    ) 
-  section.addWidget(
-      wcDatePicker(prefills)
-    ) 
-  section.addWidget(
-      attachmentRadioButton(prefills)
-    )
-  section.addWidget(
-      submit()
-    )
+  section
+    .addWidget(CardService.newDecoratedText().setTopLabel("Heads up").setText('Make sure the COI has:\n    1. The Additional Insured box marked with\n"X", "yes", or any other affermitive mark.\n2. The Certificate holder must read\nThe ATL Homemaker, LLC\nP.O. Box 46288\n Atlanta, GA 30311\nIf not email Vendors agent, CC the \nVendor, to have an updated COI Emailed.' ))
+    .addWidget(date(prefills))
+    .addWidget(insured())
+    .addWidget(glDatePicker(prefills))
+    .addWidget(wcDatePicker(prefills))
+    .addWidget(attachmentRadioButton(prefills))
+    .addWidget(submitCoi())
   return section
 }
 
@@ -31,7 +21,7 @@ function coiFormSection(prefills){
  * 
  * @return {ButtonSet} 
  */
-function submit(){
+function submitCoi(){
 
   var submitForm = CardService.newAction().setFunctionName('submitCoiForm');
 
@@ -42,7 +32,6 @@ function submit(){
         .setOnClickAction(submitForm)
     );
 }
-
 
 /**
  * create text input field 
@@ -75,8 +64,7 @@ function date(prefills){
     //.setTitle("Date")
 }
 
-
-function certificateHolder(){
+function _certificateHolder(){
   Logger.log("certificateHolder() called")
 
   return CardService.newButtonSet()
@@ -86,8 +74,6 @@ function certificateHolder(){
         .setOnClickAction(CardService.newAction().setFunctionName('gotoRecipt').setParameters({"service":"receipt"})) //.setParameters({'id': id.toString()})
         .setDisabled(false))
 }
-
-
 
 /**
  * Create a date

@@ -1,5 +1,3 @@
-
- 
 /**
  * Returns the contextual add-on data that should be rendered for
  * the current e-mail thread. This function satisfies the requirements of
@@ -21,13 +19,11 @@ function messageData(event) {
                   ref:hasRef(message)
                   }
 
-   
   //Logger.log(prefills)
   return prefills
   //let card = receiptCard(prefills)
   //return card.build()
 }
-
 
 /**
  * Retrieves the current message given an action event object.
@@ -190,7 +186,6 @@ function amountInput(prefills){
   
 }
 
-
 /**
  * create text input field for referance number
  * 
@@ -214,24 +209,20 @@ function referanceNumberInput(prefills){
  */
 function attachmentRadioButton(prefills){
   Logger.log('attachmentRadioButton(prefills) called')
-  //Logger.log(prefills)
+  Logger.log(prefills.attachments)
   var radioGroup = CardService.newSelectionInput()
     .setType(CardService.SelectionInputType.RADIO_BUTTON)
     .setTitle("Select one attachment.")
     .setFieldName("attachments")
-
-  
-  if(prefills.attachments.length > 0 ){
+  if(prefills.attachments.length == 0)(radioGroup.addItem("Email body as attachment", -1, true))
+  if(prefills.attachments.length == 1){radioGroup.addItem(prefills.attachments[0].getName(), 0, true)}
+  if(prefills.attachments.length > 1 ){
     prefills.attachments.forEach(function(attachment,index){
-      if(attachment.getContentType() == 'image/jpeg' || attachment.getContentType() == 'application/pdf' || attachment.getContentType() == 'image/jpg') {
+      //limit this condition (attachment.getContentType() == application/vnd.openxmlformats-officedocument.wordprocessingml.document) to only bills
+      if(attachment.getContentType() == 'image/jpeg' || attachment.getContentType() == 'application/pdf' || attachment.getContentType() == 'image/jpg' || attachment.getContentType() == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
       radioGroup.addItem(attachment.getName(), index, true)
-      }else{
-        radioGroup.addItem("Email as receipt", -1, true)
-      
       }
     })
-  }else{
-    radioGroup.addItem("Email as receipt", -1, true)
   }
     
     return radioGroup
@@ -244,7 +235,7 @@ function attachmentRadioButton(prefills){
  */
 function buttons(){
 
-  var submitForm = CardService.newAction().setFunctionName('submitForm');
+  var submitForm = CardService.newAction().setFunctionName('submitReceiptForm');
 
   return CardService.newButtonSet()
     .addButton(
@@ -303,9 +294,9 @@ function findDollarAmounts(message) {
   let results = []
   let match
   while ((match = regex.exec(messageBody)) !== null) {
-    //console.log(`Found ${match[0]}. Next starts at ${regex.lastIndex}.`);
-    if(!results.includes(parseInt(match[0]))){
-      results.push(parseInt(match[0]))
+    console.log(`Found ${match[0]}. Next starts at ${regex.lastIndex}.`);
+    if(!results.includes(/*parseInt(*/match[0]/*)*/)){
+      results.push(/*parseInt(*/match[0]/*)*/)
     }
   }
   let output= []
@@ -314,6 +305,7 @@ function findDollarAmounts(message) {
       output.push(amount)
     }
   })
+  Logger.log(output)
   return output 
 }
 
