@@ -1,2 +1,2 @@
 # add-on-admin
-working receipt and coi cards
+in house add-on to boost productivity
