@@ -4,10 +4,15 @@
  */
 function onHomepage(e) {
   //e{clientPlatform=web, commonEventObject={hostApp=GMAIL, platform=WEB}, hostApp=gmail}
-  
+
   return createSelectionCard(e);
 }
 
+/**
+   *  Create a child card, and then navigate to it.
+   *  @param {Object} e object containing the service property card to build.
+   *  @return {ActionResponse}
+   */
 function gotoBill(e) {
     Logger.log("gotoRecipt(e) called")
      //Logger.log(e)
