@@ -7,6 +7,8 @@
  *  the contact card needs to have input fields for all add or set methods.
  *  bill attachment upload time is vary slow
  *  find ways to push processing off client side in hopes to reduce UI interruptions 
+ *  add password manager https://github.com/shahidhk/google-sheets-password-manager
+ *  card to add email attachments to project files
  */
 
 /**
